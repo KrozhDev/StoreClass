@@ -1,35 +1,22 @@
 package com.company;
 
 import java.io.*;
-import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Queue;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
-
-import static java.util.Arrays.stream;
-
 public class Basket {
 
     private long[] prices;
     private String[] goods;
-    private long amount;
-    private long productNum;
-    private HashMap<Long, Long> cart;
-
+    private long[] quantity;
 
 
     public Basket() {
         goods = new String[]{"Хлеб", "Яблоки", "Молоко"};
         prices = new long[]{100, 200, 300};
-        this.cart = new HashMap<>();
+        quantity = new long[]{0,0,0};
     }
     public Basket(String[] goods, long[] prices) {
         this.goods = goods;
         this.prices = prices;
-        this.cart = new HashMap<>();
-
     }
 
     public String[] getGoods() {
@@ -41,99 +28,81 @@ public class Basket {
     }
 
     public void addToCart(long productNum, long amount) {
-        this.cart.put(productNum, amount);
+        this.quantity[(int) (productNum-1)] = amount;
     }
 
     public void printCart() {
         System.out.println("Ваша корзина");
 
+        long sum = 0;
+        for (int i = 0; i < this.goods.length; i++) {
+            sum = sum + this.prices[i] * this.quantity[i];
+            if (this.quantity[i] != 0) {
+                System.out.println(this.goods[i] + " цена: "
+                        + this.prices[i]
+                        +" рублей, всего " + this.quantity[i] + " шт., итого: "
+                        + this.quantity[i]*this.prices[i] + " рублей");
+            }
 
-        String stringForFile = this.cart.keySet().stream().
-                map(key -> key + " " + this.cart.get(key)).
-                collect(Collectors.joining(" "));
-
-        System.out.println(stringForFile);
-    }
-
-    public void saveTxt(File textFile) {
-        System.out.println("Сохраняю корзину в файл");
-        try (FileOutputStream fos = new FileOutputStream(textFile.getPath())) {
-// перевод строки в массив байтов
-            String stringForFile = this.cart.keySet().stream().
-                    map(key -> key + " " + this.cart.get(key)).
-                    collect(Collectors.joining(" "));
-
-            byte[] bytes = stringForFile.getBytes();
-// запись байтов в файл
-            fos.write(bytes, 0, bytes.length);
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
         }
+        System.out.println();
+        System.out.println("Общая стоимость " + sum + " рублей");
     }
 
-// выгрузка из файла
-    public static Basket loadFromTxtFile(File textFile) {
-        System.out.println("Выгружаю из фала");
-        FileInputStream fos = null;
-        Basket basket = null;
-        try {
-            fos = new FileInputStream(textFile.getPath());
-            int i;
-            StringBuilder fileContents = new StringBuilder();
-            while ((i = fos.read()) != -1) {
-                if (i == 32) continue;
-                fileContents.append(i);
+    public void saveTxt(File textFile) throws RuntimeException {
+        System.out.println("Сохраняю корзину в файл");
+
+        try(PrintWriter out = new PrintWriter(textFile.getPath())) {
+
+            for (String good: this.goods) {
+                out.print(good + " ");
             }
-            basket = new Basket();
-            long prodNum = 0;
-            long prodAm = 0;
-            long counter = 0;
-            for (int idx = 0; idx < fileContents.length(); idx++) {
-                if (idx % 2 == 0) {
-                    prodNum = fileContents.charAt(idx);
-                } else {
-                    prodAm = fileContents.charAt(idx);
-                }
-                counter++;
-                if (counter > 0 & counter % 2 == 0) {
-                    basket.addToCart(Character.getNumericValue((char) prodNum), Character.getNumericValue((char) prodAm));
-                }
+            out.println();
+
+            for (long price: this.prices) {
+                out.print(price + " ");
+            }
+            out.println();
+
+            for (long amount: this.quantity) {
+                out.print(amount + " ");
             }
 
-
-        } catch (FileNotFoundException ex) {
-            System.out.println(ex.getMessage());
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                if (fos != null) {
-                    fos.close();
-                }
-            } catch (IOException ex) {
-                System.out.println(ex.getMessage());
-            }
         }
-        return basket;
     }
 
-//todo геттеры и сеттеры?
+
+    // выгрузка из файла
+    public static Basket loadFromTxtFile(File textFile) throws RuntimeException {
+        FileInputStream fos = null;
+
+        Basket basket = new Basket();
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(textFile))) {
+
+             String goodsStr = bufferedReader.readLine();
+             String pricesStr = bufferedReader.readLine();
+             String quantitiesStr = bufferedReader.readLine();
+
+             basket.goods = goodsStr.split(" ");
+             String[] arrPrices = pricesStr.split( " ");
+             basket.prices = Arrays.stream(arrPrices).
+                     map(Long::parseLong).
+                     mapToLong(Long::longValue).
+                     toArray();
+             String[] arrQuantities = quantitiesStr.split(" ");
+             basket.quantity = Arrays.stream(arrQuantities).
+                    map(Long::parseLong).
+                    mapToLong(Long::longValue).
+                    toArray();
 
 
-//     public String toString() {
-//
-//
-//        StringBuilder sb = new StringBuilder();
-//        for (String elem: this.goods) {
-//            sb.append(elem + " ");
-//        }
-//        sb.append("\n");
-//        for (long elem: this.prices) {
-//            sb.append(elem + " ");
-//        }
-//
-//        return sb.toString();
-//    }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-
+        return basket;
+    }
 }
