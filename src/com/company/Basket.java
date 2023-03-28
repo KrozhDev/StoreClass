@@ -2,11 +2,13 @@ package com.company;
 
 import java.io.*;
 import java.util.Arrays;
-public class Basket {
+public class Basket implements Serializable {
 
     private long[] prices;
     private String[] goods;
     private long[] quantity;
+
+    public static final long serialVersionUID = 1L;
 
 
     public Basket() {
@@ -103,6 +105,26 @@ public class Basket {
             throw new RuntimeException(e);
         }
 
+        return basket;
+    }
+
+    public void saveBin(File file) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+            oos.writeObject(this);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static Basket loadFromBinFile(File file) throws ClassNotFoundException {
+        Basket basket = null;
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            basket = (Basket) ois.readObject();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return basket;
     }
 }

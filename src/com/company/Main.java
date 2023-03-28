@@ -8,16 +8,16 @@ import java.util.Scanner;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
 
-        File textFile = new File("./out/basket.txt");
+        File textFile = new File("./out/basket.bin");
 
         int productNumber = 0;
         int productCount = 0;
         Basket basket = null;
 
         if (textFile.exists()) {
-            basket = Basket.loadFromTxtFile(textFile);
+            basket = Basket.loadFromBinFile(textFile);
         } else {
             basket = new Basket();
         }
@@ -59,7 +59,7 @@ public class Main {
                     continue;
                 }
                 basket.addToCart(productNumber, productCount);
-                basket.saveTxt(textFile);
+                basket.saveBin(textFile);
 
             } catch (NumberFormatException e) {
                 System.out.println("Вы ввели не число!");
